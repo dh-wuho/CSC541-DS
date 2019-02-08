@@ -140,7 +140,7 @@ void rotate_right(rbNode_t* node) {
 
 
 char* get_line(text_t *txt, int index) {
-    if(index <= 0) {
+    if(index <= 0 || index >= txt->rbRoot->key) {
         return NULL;
     }
 
@@ -156,9 +156,6 @@ char* get_line(text_t *txt, int index) {
         }
     }
 
-    if(curr->left == (rbNode_t*)'\0') {
-        return NULL;
-    }
     return (char*)curr->left;
 }
 
@@ -169,9 +166,25 @@ void append_line(text_t* txt, char* new_line) {
 
 
 char* set_line(text_t* txt, int index, char* new_line) {
-   // char *old = txt->_text[index-1];
-   // txt->_text[index-1] = new_line;
-    return NULL;
+    if(index <= 0 || index >= txt->rbRoot->key) {
+        return NULL;
+    }
+
+    rbNode_t* curr = txt->rbRoot; 
+
+    while(curr->right) {
+        if(index <= curr->left->key) {
+            curr = curr->left;
+        }
+        else {
+            index = index - curr->left->key;
+            curr = curr->right;
+        }
+    }
+
+    curr->left = (rbNode_t*) new_line; 
+
+    return get_line(txt, index - 1);
 }
 
 void insert_case1(rbNode_t* node) {
@@ -220,7 +233,7 @@ void insert_recursive(rbNode_t* root, rbNode_t* newNode, int index) {
             insert_recursive(root->right, newNode, index - root->left->key);
         }
         else {
-            insert_recursive(root->right, newNode, index - root->left->key);
+            insert_recursive(root->left, newNode, index);
         }
     }
     else {
