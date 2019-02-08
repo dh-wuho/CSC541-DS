@@ -65,9 +65,64 @@ int length_text(text_t *txt) {
     return txt->key - 1;
 }
 
-void rotate_left() {}
+void rotate_left(text_t* node) {
+    text_t* tmp = node->right;
+    text_t* p = parent(node);
 
-void rotate_right() {}
+    if(tmp->right == NULL) {
+        cout << "someting wrong in rotate_left." << endl;
+    }
+
+    node->right = tmp->left;
+    tmp->left = node;
+    node->parent = tmp;
+    
+    
+    if(node->key != 1) {
+        node->right->parent = node;
+        node->key = node->left->key + node->right->key;
+    }
+
+    if(p != NULL) {
+        if(node == p->left) {
+            p->left = tmp;
+        }
+        else {
+            p->right = tmp;
+        }
+    }
+    tmp->parent = p;
+    tmp->key = tmp->left->key + tmp->right->key;
+}
+
+void rotate_right(text_t* node) {
+    text_t* tmp = node->left;
+    text_t* p = parent(node);
+
+    if(tmp->right == NULL) {
+        cout << "someting wrong in rotate_right." << endl;
+    }
+
+    node->left = tmp->right;
+    tmp->right = node;
+    node->parent = tmp;
+    
+    
+    if(node->key != 1) {
+        node->left->parent = node;
+        node->key = node->left->key + node->right->key;
+    }
+
+    if(p != NULL) {
+        if(node == p->left) {
+            p->left = tmp;
+        }
+        else {
+            p->right = tmp;
+        }
+    }
+    tmp->parent = p;
+}
 
 
 char* get_line(text_t *txt, int index) {
@@ -96,7 +151,7 @@ void append_line(text_t *txt, char * new_line) {
 }
 
 
-char* set_line( text_t *txt, int index, char * new_line){
+char* set_line(text_t* txt, int index, char* new_line) {
     char *old = txt->_text[index-1];
     txt->_text[index-1] = new_line;
     return old;
@@ -134,30 +189,58 @@ void insert_recursive(text_t* root, text_t* newNode, int index) {
 }
 
 void insert_rebalance(text_t* node) {
-    if(parent(n)->color == BLACK) {
+    if(parent(n) == NULL) {
         insert_case1(node);
     }
-    else if(uncle(n)->color == RED) {
+    else if(parent(n)->color == BLACK) {
         insert_case2(node);
     }
-    else {
+    else if(uncle(n)->color == RED) {
         insert_case3(node);
+    }
+    else {
+        insert_case4(node);
     }
 }
 
 void insert_case1(text_t* node) {
-    return;
+    node->color = BLACK
 }
 
 void insert_case2(text_t* node) {
+    return;
+}
+
+void insert_case3(text_t* node) {
     parent(n)->color = BLACK;
     uncle(n)->color = BLACK;
     grandparent(n)->color = RED;
     insert_rebalance(grandparent(n));
 }
 
-void insert_case3(text_t* node) {
+void insert_case4(text_t* node) {
+    text_t* p = parent(node);
+    text_t* g = grandparent(node);
 
+    // first step
+    if(node == g->left->right) {
+        rotate_left(p);
+        node = node->left;
+    }
+    else if(node == g->right->left) {
+        rotate_right(p);
+        node = node->right;
+    }
+
+    // seconde step
+    if (node == p->left) {
+        rotate_right(g);
+    }
+    else {
+        rotate_left(g);
+    }
+    p->color = BLACK;
+    g->color = RED;
 }
 
 char* delete_line( text_t *txt, int index) {
