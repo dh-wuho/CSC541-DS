@@ -1,47 +1,55 @@
-#include <vector>
 #include <iostream>
 #include <stdlib.h>
 
-//#define EOF -1
+using namespace std;
 
 enum nodeColor {RED, BLACK};
 
-struct text_t {
+struct rbNode_t {
     int key;
-    char* text;
     nodeColor color;
-    text_t* left;
-    text_t* right;
-    text_t* parent;
-    text_t(char* t = NULL, nodeColor c = RED) 
-        : key(1), text(t), color(c), left(NULL), right(NULL), parent(NULL) {}
+    rbNode_t* left;
+    rbNode_t* right;
+    rbNode_t* parent;
+    rbNode_t(char* t = NULL, nodeColor c = RED) 
+        : key(1), color(c), left(NULL), right(NULL), parent(NULL) {
+            left = (rbNode_t*) t;
+        }
 };
+
+struct text_t {
+    rbNode_t* rbRoot;
+};
+
+void insert_case1(rbNode_t* node);
+void insert_case2(rbNode_t* node);
+void insert_case3(rbNode_t* node);
+void insert_case4(rbNode_t* node);
+void insert_line(text_t* txt, int index, char* new_line);
+void insert_recursive(rbNode_t* root, rbNode_t* newNode, int index);
+void insert_rebalance(rbNode_t* node);
 
 // node of br_tree
 text_t* create_text() {
-    text_t* root = new text_t;
-    root->key = 0;
-    root->color = BLACK;
-    root->left = (text_t*)EOF;
-    root->right = NULL;
-    root->parent = NULL;
-    return root;
+    text_t* txt = new text_t;
+    txt->rbRoot = new rbNode_t('\0', BLACK);
+    return txt;
 }
 
 
 // basic operations
-text_t* parent(text_t* node) {
+rbNode_t* parent(rbNode_t* node) {
     return node->parent;
 }
 
-text_t* grandparent(text_t* node) {
+rbNode_t* grandparent(rbNode_t* node) {
     if(node->parent == NULL) {
         return NULL;
     }
     return node->parent->parent;
 }
 
-text_t* sibling(text_t* node) {
+rbNode_t* sibling(rbNode_t* node) {
     if(node->parent == NULL) {
         return NULL;
     }
@@ -53,7 +61,7 @@ text_t* sibling(text_t* node) {
     }
 }
 
-text_t* uncle(text_t* node) {
+rbNode_t* uncle(rbNode_t* node) {
     if(grandparent(node) == NULL) {
         return NULL;
     }
@@ -62,12 +70,18 @@ text_t* uncle(text_t* node) {
 
 
 int length_text(text_t *txt) {
-    return txt->key - 1;
+    if(txt == NULL) {
+        return -1;
+    }
+    else {
+        return txt->rbRoot->key - 1;
+    }
+    
 }
 
-void rotate_left(text_t* node) {
-    text_t* tmp = node->right;
-    text_t* p = parent(node);
+void rotate_left(rbNode_t* node) {
+    rbNode_t* tmp = node->right;
+    rbNode_t* p = parent(node);
 
     if(tmp->right == NULL) {
         cout << "someting wrong in rotate_left." << endl;
@@ -95,9 +109,9 @@ void rotate_left(text_t* node) {
     tmp->key = tmp->left->key + tmp->right->key;
 }
 
-void rotate_right(text_t* node) {
-    text_t* tmp = node->left;
-    text_t* p = parent(node);
+void rotate_right(rbNode_t* node) {
+    rbNode_t* tmp = node->left;
+    rbNode_t* p = parent(node);
 
     if(tmp->right == NULL) {
         cout << "someting wrong in rotate_right." << endl;
@@ -130,97 +144,54 @@ char* get_line(text_t *txt, int index) {
         return NULL;
     }
 
-    while(txt->right) {
-        if(index <= txt->left->key) {
-            txt = txt->left;
+    rbNode_t* curr = txt->rbRoot; 
+
+    while(curr->right) {
+        if(index <= curr->left->key) {
+            curr = curr->left;
         }
         else {
-            index = index - txt->left->key;
-            txt = txt->right;
+            index = index - curr->left->key;
+            curr = curr->right;
         }
     }
 
-    if(txt->left == (text_t*)EOF) {
+    if(curr->left == (rbNode_t*)'\0') {
         return NULL;
     }
-    return (char*)txt->left;
+    return (char*)curr->left;
 }
 
-void append_line(text_t *txt, char * new_line) {
-    txt->_text.push_back(new_line);
+void append_line(text_t* txt, char* new_line) {
+    int lastPos = length_text(txt) + 1;
+    insert_line(txt, lastPos, new_line);
 }
 
 
 char* set_line(text_t* txt, int index, char* new_line) {
-    char *old = txt->_text[index-1];
-    txt->_text[index-1] = new_line;
-    return old;
+   // char *old = txt->_text[index-1];
+   // txt->_text[index-1] = new_line;
+    return NULL;
 }
 
-
-void insert_line(text_t* txt, int index, char* new_line) {
-    if(index <=0 || index >root->key) {
-        index = root->key;
-    }
-
-    newNode = new text_t(new_line);
-    insert_recursive(txt, newNode, index);
-    insert_rebalance(newNode);
+void insert_case1(rbNode_t* node) {
+    node->color = BLACK;
 }
 
-void insert_recursive(text_t* root, text_t* newNode, int index) {
-    if(root->right) {
-        if(index > root->left->key) {
-            insert_recursive(root->right, newNode, index - root->left->key);
-        }
-        else {
-            insert_recursive(root->right, newNode, index - root->left->key);
-        }
-    }
-    else {
-        text_t* oldNode = new text_t();
-        oldNode->left = root->left;
-        oldNode->parent = root;
-        newNode->parent = root;
-        root->left = newNode;
-        root->right = oldNode;
-    }
-    root->key = root->left->key + root->right->key;
-}
-
-void insert_rebalance(text_t* node) {
-    if(parent(n) == NULL) {
-        insert_case1(node);
-    }
-    else if(parent(n)->color == BLACK) {
-        insert_case2(node);
-    }
-    else if(uncle(n)->color == RED) {
-        insert_case3(node);
-    }
-    else {
-        insert_case4(node);
-    }
-}
-
-void insert_case1(text_t* node) {
-    node->color = BLACK
-}
-
-void insert_case2(text_t* node) {
+void insert_case2(rbNode_t* node) {
     return;
 }
 
-void insert_case3(text_t* node) {
-    parent(n)->color = BLACK;
-    uncle(n)->color = BLACK;
-    grandparent(n)->color = RED;
-    insert_rebalance(grandparent(n));
+void insert_case3(rbNode_t* node) {
+    parent(node)->color = BLACK;
+    uncle(node)->color = BLACK;
+    grandparent(node)->color = RED;
+    insert_rebalance(grandparent(node));
 }
 
-void insert_case4(text_t* node) {
-    text_t* p = parent(node);
-    text_t* g = grandparent(node);
+void insert_case4(rbNode_t* node) {
+    rbNode_t* p = parent(node);
+    rbNode_t* g = grandparent(node);
 
     // first step
     if(node == g->left->right) {
@@ -243,8 +214,59 @@ void insert_case4(text_t* node) {
     g->color = RED;
 }
 
+void insert_recursive(rbNode_t* root, rbNode_t* newNode, int index) {
+    if(root->right) {
+        if(index > root->left->key) {
+            insert_recursive(root->right, newNode, index - root->left->key);
+        }
+        else {
+            insert_recursive(root->right, newNode, index - root->left->key);
+        }
+    }
+    else {
+        rbNode_t* oldNode = new rbNode_t();
+        oldNode->left = root->left;
+        oldNode->parent = root;
+        newNode->parent = root;
+        root->left = newNode;
+        root->right = oldNode;
+    }
+    root->key = root->left->key + root->right->key;
+}
+
+void insert_rebalance(rbNode_t* node) {
+    if(parent(node) == NULL) {
+        insert_case1(node);
+    }
+    else if(parent(node)->color == BLACK) {
+        insert_case2(node);
+    }
+    else if(uncle(node)->color == RED) {
+        insert_case3(node);
+    }
+    else {
+        insert_case4(node);
+    }
+}
+
+void insert_line(text_t* txt, int index, char* new_line) {
+    if(index <= 0 || index > txt->rbRoot->key) {
+        index = txt->rbRoot->key;
+    }
+
+    rbNode_t* newNode = new rbNode_t(new_line);
+    insert_recursive(txt->rbRoot, newNode, index);
+    insert_rebalance(newNode);
+
+    txt->rbRoot = newNode;
+    while(parent(txt->rbRoot) != NULL) {
+        txt->rbRoot = parent(txt->rbRoot);
+    }
+}
+
+
 char* delete_line( text_t *txt, int index) {
-    char *old = txt->_text[index-1];
-    txt->_text.erase(txt->_text.begin()+index-1);
-    return old;
+    //char *old = txt->_text[index-1];
+    //txt->_text.erase(txt->_text.begin()+index-1);
+    return NULL;
 }
