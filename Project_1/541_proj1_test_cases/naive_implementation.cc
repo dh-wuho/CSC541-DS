@@ -52,6 +52,8 @@ void delete_case6(rbNode_t *node);
 
 char *delete_line(text_t *txt, int index);
 
+void printTree(text_t *txt);
+
 // node of br_tree
 text_t *create_text() {
     text_t *txt = new text_t;
@@ -293,11 +295,14 @@ void insert_line(text_t *txt, int index, char *new_line) {
 
 void replace_node(rbNode_t *n, rbNode_t *child) {
     child->parent = n->parent;
-    if (n == n->parent->left) {
-        n->parent->left = child;
-    } else {
-        n->parent->right = child;
+    if (n->parent) {
+        if (n == n->parent->left) {
+            n->parent->left = child;
+        } else {
+            n->parent->right = child;
+        }
     }
+
 
 //    child->key--;
     rbNode_t *temp = child;
@@ -374,10 +379,8 @@ void delete_case5(rbNode_t *n) {
 void delete_case6(rbNode_t *n) {
     rbNode_t *s = sibling(n);
 
-
     s->color = n->parent->color;
     n->parent->color = BLACK;
-
 
     if (n == n->parent->left) {
 
@@ -392,8 +395,6 @@ void delete_case6(rbNode_t *n) {
 char *delete_line(text_t *txt, int index) {
     //char *old = txt->_text[index-1];
     //txt->_text.erase(txt->_text.begin()+index-1);
-
-    cout << "index: " << index << endl;
 
     // index illegal
     if (index <= 0 || index > txt->rbRoot->key) {
@@ -411,8 +412,7 @@ char *delete_line(text_t *txt, int index) {
         }
     }
 
-    cout << "this"<< "line is:" << (char *) curr->left << endl;
-
+    char *reValue = (char *) curr->left;
     rbNode_t *n = curr->parent;
     rbNode_t *child = sibling(curr);
     replace_node(n, child);
@@ -425,7 +425,12 @@ char *delete_line(text_t *txt, int index) {
         }
     }
 
-    free(curr);
-    free(n);
-    return NULL;
+    txt->rbRoot = child;
+    while (parent(txt->rbRoot) != NULL) {
+        txt->rbRoot = parent(txt->rbRoot);
+    }
+
+    delete curr;
+    delete n;
+    return reValue;
 }
