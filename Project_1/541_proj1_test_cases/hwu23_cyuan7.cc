@@ -1,8 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
 
-using namespace std;
-
 enum nodeColor {
     RED, BLACK
 };
@@ -25,33 +23,19 @@ struct text_t {
 };
 
 void insert_case1(rbNode_t *node);
-
 void insert_case2(rbNode_t *node);
-
 void insert_case3(rbNode_t *node);
-
 void insert_case4(rbNode_t *node);
-
 void insert_line(text_t *txt, int index, char *new_line);
-
 void insert_recursive(rbNode_t *root, rbNode_t *newNode, int index);
-
 void insert_rebalance(rbNode_t *node);
-
 void delete_case1(rbNode_t *node);
-
 void delete_case2(rbNode_t *node);
-
 void delete_case3(rbNode_t *node);
-
 void delete_case4(rbNode_t *node);
-
 void delete_case5(rbNode_t *node);
-
 void delete_case6(rbNode_t *node);
-
 char *delete_line(text_t *txt, int index);
-
 void printTree(text_t *txt);
 
 // node of br_tree
@@ -107,7 +91,7 @@ void rotate_left(rbNode_t *node) {
     rbNode_t *p = parent(node);
 
     if (tmp->right == NULL) {
-        cout << "someting wrong in rotate_left." << endl;
+        std::cout << "someting wrong in rotate_right." << std::endl;
     }
 
     node->right = tmp->left;
@@ -136,7 +120,7 @@ void rotate_right(rbNode_t *node) {
     rbNode_t *p = parent(node);
 
     if (tmp->right == NULL) {
-        cout << "someting wrong in rotate_right." << endl;
+        std::cout << "someting wrong in rotate_right." << std::endl;
     }
 
     node->left = tmp->right;
@@ -178,7 +162,7 @@ char *get_line(text_t *txt, int index) {
         }
     }
 
-    return (char *) curr->left;
+    return (char*) curr->left;
 }
 
 void append_line(text_t *txt, char *new_line) {
@@ -303,8 +287,6 @@ void replace_node(rbNode_t *n, rbNode_t *child) {
         }
     }
 
-
-//    child->key--;
     rbNode_t *temp = child;
     while (temp->parent) {
         temp = temp->parent;
@@ -392,9 +374,7 @@ void delete_case6(rbNode_t *n) {
     }
 }
 
-char *delete_line(text_t *txt, int index) {
-    //char *old = txt->_text[index-1];
-    //txt->_text.erase(txt->_text.begin()+index-1);
+char* delete_line(text_t *txt, int index) {
 
     // index illegal
     if (index <= 0 || index > txt->rbRoot->key) {
