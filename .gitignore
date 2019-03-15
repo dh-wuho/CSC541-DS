@@ -1,0 +1,5 @@
+*.pptx
+*.pdf
+*.docx
+!CSC541Project1-S19.docx
+!CSC541-2019-Proj2.pdf
