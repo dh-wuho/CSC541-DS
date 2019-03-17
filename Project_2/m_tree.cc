@@ -14,7 +14,6 @@ struct m_tree_t {
     int rightmax;
     int measure;
 
-    m_tree_t(int k) : key(k), left(NULL), right(NULL), height(1), measure(0) {}
     m_tree_t(int k): key(k), left(NULL), right(NULL), height(1),
         l_value(0), l_value(0), leftmin(0), rightmax(0), measure(0) {}
 };
