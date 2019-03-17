@@ -1,16 +1,21 @@
 #include<stdlib.h>
+#include<iostream>
+
+using namespace std;
 
 struct m_tree_t {
     int key;
-    m_tree_t* left;
-    m_tree_t* right;
+    struct m_tree_t *left;
+    struct m_tree_t *right;
     int height;
     int l_value;
     int r_value;
     int leftmin;
     int rightmax;
     int measure;
-    m_tree_t(int k): key(k), left(NULL), right(NULL), height(1), 
+
+    m_tree_t(int k) : key(k), left(NULL), right(NULL), height(1), measure(0) {}
+    m_tree_t(int k): key(k), left(NULL), right(NULL), height(1),
         l_value(0), l_value(0), leftmin(0), rightmax(0), measure(0) {}
 };
 
@@ -21,21 +26,27 @@ struct interval_list {
     interval_list(int a, int b): left_point(a), right_point(b), next(NULL) {}
 };
 
-int get_height(m_tree_t* node) {
-    if(node == NULL) {
+int get_height(m_tree_t *node) {
+    if (node == NULL) {
         return 0;
-    }
-    else {
+    } else {
         return node->height;
     }
 }
 
-int get_balance_factor(m_tree_t* node) {
-    if(node == NULL) {
+int get_balance_factor(m_tree_t *node) {
+    if (node == NULL) {
         return 0;
-    }
-    else {
-        return node->left->height - node->right->height;
+    } else {
+        int leftheight = 0;
+        int rightheight = 0;
+        if (node->left) {
+           leftheight = node->left->height;
+        }
+        if (node->right) {
+           rightheight = node->right->height;
+        }
+        return leftheight - rightheight;
     }
 }
 
@@ -44,53 +55,39 @@ int max(int a, int b) {
 }
 
 int min(int a, int b) {
-    return a > b ? b : a;
+    return a < b ? a : b;
 }
 
-void set_measure(m_tree_t* node)
-{
+void set_measure(m_tree_t *node) {
     // if leaf
-    if(node->right == NULL){
+    if (node->right == NULL) {
         node->measure = min(node->rightmax, node->r_value) - max(node->leftmin, node->l_value);
         return;
-    }  
-    if(node->right->leftmin < node->l_value && 
+    }
+    if (node->right->leftmin < node->l_value &&
         node->left->rightmax >= node->r_value) {
         node->measure = node->r_value - node->l_value;
     }
-    if(node->right->leftmin >= node->l_value && 
+    if (node->right->leftmin >= node->l_value &&
         node->left->rightmax >= node->r_value) {
         node->measure = node->r_value - node->key + node->left->measure;
     }
-    if(node->right->leftmin < node->l_value && 
+    if (node->right->leftmin < node->l_value &&
         node->left->rightmax < node->r_value) {
-        node->measure = node->right->measure + node->key - node->l_value;   
-    }  
-    if(node->right->leftmin >= node->l_value && 
+        node->measure = node->right->measure + node->key - node->l_value;
+    }
+    if (node->right->leftmin >= node->l_value &&
         node->left->rightmax < node->r_value) {
         node->measure = node->right->measure + node->left->measure;
     }
 }
 
-void set_min_max(m_tree_t* node) {
-    if(node != NULL) {
-        if(node->left->leftmin < node->right->leftmin) {
-            node->leftmin = node->left->leftmin;
-        }
-        else {
-            node->leftmin = node->right->leftmin;
-        }
-        if(node->left->rightmax < node->right->rightmax) {
-            node->rightmax = node->right->rightmax;
-        }
-        else {
-            node->rightmax = node->left->rightmax;
-        }
-    } 
+void copy_data(m_tree_t *from, m_tree_t *to) {
+
 }
 
-m_tree_t* left_rotate(m_tree_t* root) {
-    m_tree_t* new_root = root->right;
+m_tree_t *left_rotate(m_tree_t *root) {
+    m_tree_t *new_root = root->right;
 
     // rotate
     root->right = new_root->left;
@@ -104,8 +101,8 @@ m_tree_t* left_rotate(m_tree_t* root) {
     return new_root;
 }
 
-m_tree_t* right_rotate(m_tree_t* root) {
-    m_tree_t* new_root = root->left;
+m_tree_t *right_rotate(m_tree_t *root) {
+    m_tree_t *new_root = root->left;
 
     // rotate
     root->left = new_root->right;
@@ -119,87 +116,128 @@ m_tree_t* right_rotate(m_tree_t* root) {
     return new_root;
 }
 
-void rebalance(m_tree_t* root) {
+void rebalance(m_tree_t *root) {
     // factor = left - right
     int root_factor = get_balance_factor(root);
     int left_factor = get_balance_factor(root->left);
     int right_factor = get_balance_factor(root->right);
-    
+
     // LL
-    if(root_factor > 1 && left_factor >= 0) {
-        return right_rotate(root);
+    if (root_factor > 1 && left_factor >= 0) {
+        right_rotate(root);
     }
-    // LR
-    else if(root_factor > 1 && left_factor < 0) {
+        // LR
+    else if (root_factor > 1 && left_factor < 0) {
         root->left = left_rotate(root->left);
-        return right_rotate(root);
+        right_rotate(root);
     }
-    // RR
-    else if(root_factor < -1 && right_factor <= 0) {
-        return left_rotate(root);
+        // RR
+    else if (root_factor < -1 && right_factor <= 0) {
+        left_rotate(root);
     }
-    // RL
-    else if(root_factor < -1 && right_factor > 0){
+        // RL
+    else if (root_factor < -1 && right_factor > 0) {
         root->right = right_rotate(root->right);
-        return right_rorate(root);
+        right_rotate(root);
     }
-    return root;
 }
 
-void insert_node(m_tree_t* root, int key) {
-    m_tree_t* new_node = new m_tree_t(key);
-    if(root == NULL) {
+void insert_node(m_tree_t *&root, int key) {
+    if (root == NULL) {
+        m_tree_t * new_node = new
+        m_tree_t(key);
         root = new_node;
-    }
-
-    if(root->key == key) {
+    } else if (root->key == key) {
         return;
-    }
-    
-    if(root->key > key) {
-        root->left = insert_node(root->left, key);
-    }
-    else {
+    } else if (root->key > key) {
+        insert_node(root->left, key);
+    } else {
         insert_node(root->right, key);
     }
 
     rebalance(root);
+
+    root->height = max(get_height(root->left), get_height(root->right)) + 1;
 }
 
-void delete_node(m_tree_t* root, int key) {
-    if(root == NULL) {
+void delete_node(m_tree_t *root, int key) {
+    if (NULL == root) {
         return;
     }
 
-    m_tree_t* to_delete = NULL;
-    if(root->key > key) {
+    if (key < root->key) {
         delete_node(root->left, key);
-    }
-    else if(root->key < key) {
+        rebalance(root);
+    } else if (key > root->key) {
         delete_node(root->right, key);
-    }
-    else {
-        if(root->right == NULL) {
-            root->key 
+        rebalance(root);
+    } else {
+        if (root->left == NULL) {
+            m_tree_t *temp = root;
+            root = root->right;
+            free(temp);
+        } else if (root->right == NULL) {
+            m_tree_t *temp = root;
+            root = root->left;
+            free(temp);
+        } else {
+            // node has both left and right child
+            // find biggest element in left subtree
+            m_tree_t *temp = root->left;
+            while (temp->right != NULL) {
+                temp = temp->right;
+            }
+            copy_data(temp, root);
+            delete_node(root->left, temp->key);
         }
     }
+
+    if (root) {
+        root->height = max(get_height(root->left), get_height(root->right)) + 1;
+    }
 }
 
-m_tree_t* create_m_tree() {
-    return new m_tree_t();
-}
-
-
-void insert_interval(m_tree_t* tree, int a, int b) {
-
-}
-
-
-void delete_interval(m_tree_t* tree, int a, int b) {
-
+m_tree_t *create_m_tree() {
+//    return new
+//    m_tree_t();
 }
 
 
-int query_length(m_tree_t* tree) {
+void insert_interval(m_tree_t *tree, int a, int b) {
 
+}
+
+
+void delete_interval(m_tree_t *tree, int a, int b) {
+
+}
+
+
+int query_length(m_tree_t *tree) {
+
+}
+
+void prepoder(m_tree_t *root) {
+    if (nullptr == root) {
+        return;
+    }
+    prepoder(root->left);
+    cout << root->key << " ";
+    prepoder(root->right);
+}
+
+int main() {
+    m_tree_t *root = NULL;
+    insert_node(root, 4);
+    insert_node(root, 2);
+    insert_node(root, 6);
+    insert_node(root, 1);
+    insert_node(root, 2);
+
+//    insert_node(root, 3);
+//    insert_node(root, 5);
+//    insert_node(root, 7);
+//    insert_node(root, 16);
+//    insert_node(root, 15);
+    prepoder(root);
 }
