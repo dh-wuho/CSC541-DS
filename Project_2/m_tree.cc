@@ -15,7 +15,7 @@ struct m_tree_t {
     int measure;
 
     m_tree_t(int k): key(k), left(NULL), right(NULL), height(1),
-        l_value(0), l_value(0), leftmin(0), rightmax(0), measure(0) {}
+        l_value(0), r_value(0), leftmin(0), rightmax(0), measure(0) {}
 };
 
 struct interval_list {
@@ -40,10 +40,10 @@ int get_balance_factor(m_tree_t *node) {
         int leftheight = 0;
         int rightheight = 0;
         if (node->left) {
-           leftheight = node->left->height;
+            leftheight = node->left->height;
         }
         if (node->right) {
-           rightheight = node->right->height;
+            rightheight = node->right->height;
         }
         return leftheight - rightheight;
     }
@@ -81,8 +81,10 @@ void set_measure(m_tree_t *node) {
     }
 }
 
-void copy_data(m_tree_t *from, m_tree_t *to) {
-
+void swap_data(m_tree_t *from, m_tree_t *to) {
+    int temp = to->key;
+    to->key = from->key;
+    from->key = temp;
 }
 
 m_tree_t *left_rotate(m_tree_t *root) {
@@ -159,7 +161,7 @@ void insert_node(m_tree_t *&root, int key) {
     root->height = max(get_height(root->left), get_height(root->right)) + 1;
 }
 
-void delete_node(m_tree_t *root, int key) {
+void delete_node(m_tree_t *&root, int key) {
     if (NULL == root) {
         return;
     }
@@ -186,7 +188,7 @@ void delete_node(m_tree_t *root, int key) {
             while (temp->right != NULL) {
                 temp = temp->right;
             }
-            copy_data(temp, root);
+            swap_data(temp, root);
             delete_node(root->left, temp->key);
         }
     }
@@ -216,13 +218,13 @@ int query_length(m_tree_t *tree) {
 
 }
 
-void prepoder(m_tree_t *root) {
+void preporder(m_tree_t *root) {
     if (nullptr == root) {
         return;
     }
-    prepoder(root->left);
+    preporder(root->left);
     cout << root->key << " ";
-    prepoder(root->right);
+    preporder(root->right);
 }
 
 int main() {
@@ -231,12 +233,10 @@ int main() {
     insert_node(root, 2);
     insert_node(root, 6);
     insert_node(root, 1);
-    insert_node(root, 2);
+    delete_node(root, 4);
+    delete_node(root, 6);
+    delete_node(root, 1);
+    delete_node(root, 2);
 
-//    insert_node(root, 3);
-//    insert_node(root, 5);
-//    insert_node(root, 7);
-//    insert_node(root, 16);
-//    insert_node(root, 15);
-    prepoder(root);
+    preporder(root);
 }
