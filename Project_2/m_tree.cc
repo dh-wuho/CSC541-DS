@@ -5,6 +5,10 @@ struct m_tree_t {
     m_tree_t* left;
     m_tree_t* right;
     int height;
+    int l_value;
+    int r_value;
+    int leftmin;
+    int rightmax;
     int measure;
     m_tree_t(int k): key(k), left(NULL), right(NULL), height(1), measure(0) {}
 };
@@ -29,6 +33,31 @@ int get_balance_factor(m_tree_t* node) {
 
 int max(int a, int b) {
     return a > b ? a : b;
+}
+
+void set_measure(m_tree_t* node)
+{
+    // if leaf
+    if(node->right == NULL){
+        node->measure = min(node->rightmax, node->r_value) - max(node->leftmin, node->l_value);
+        return;
+    }  
+    if(node->right->leftmin < node->l_value && 
+        node->left->rightmax >= node->r_value) {
+        node->measure = node->r_value - node->l_value;
+    }
+    if(node->right->leftmin >= node->l_value && 
+        node->left->rightmax >= node->r_value) {
+        node->measure = node->r_value - node->key + node->left->measure;
+    }
+    if(node->right->leftmin < node->l_value && 
+        node->left->rightmax < node->r_value) {
+        node->measure = node->right->measure + node->key - node->l_value;   
+    }  
+    if(node->right->leftmin >= node->l_value && 
+        node->left->rightmax < node->r_value) {
+        node->measure = node->right->measure + node->left->measure;
+    }
 }
 
 m_tree_t* left_rotate(m_tree_t* root) {
@@ -128,7 +157,7 @@ void delete_node(m_tree_t* root, int key) {
 }
 
 m_tree_t* create_m_tree() {
-
+    return new m_tree_t();
 }
 
 
