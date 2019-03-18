@@ -140,8 +140,6 @@ void del_copy_node(m_tree_t *from, m_tree_t *to) {
     to->left = from->left;
     to->right = from->right;
     to->height = from->height;
-    to->l_value = from->l_value;
-    to->r_value = from->r_value;
     to->leftmin = from->leftmin;
     to->rightmax = from->rightmax;
     to->measure = from->measure;
@@ -280,6 +278,7 @@ void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
             struct m_tree_t *old_node = new m_tree_t(0, root->key, root->r_value);
             struct m_tree_t *new_node = new m_tree_t(key, root->l_value, root->key);
             copy_node(root, old_node);
+            old_node->r_value = root->r_value;
             root->right = old_node;
             new_node->left = (m_tree_t *) a_interval;
             new_node->leftmin = a_interval->left_point;
@@ -314,38 +313,65 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
             delete_node(root->left, key, a_interval);
             if (root->left == NULL) {
                 del_copy_node(root->right, root);
-                if (root->right != NULL) {
-                    root->right->r_value = root->r_value;
-                    root->left->l_value = root->l_value;
-                }
                 set_min_max(root);
                 set_measure(root);
             }
             if (root->right) {
+                if (root->key == key) {
+                    m_tree_t *node = root->left;
+                    while (node->right != NULL) {
+                        node = node->right;
+                    }
+                    root->key = node->key;
+                    root->right->r_value = root->r_value;
+                    root->left->l_value = root->l_value;
+                    root->left->r_value = root->key;
+                    root->right->l_value = root->key;
+                    set_measure(root->left);
+                    set_measure(root->right);
+                }
+                root->right->r_value = root->r_value;
+                root->left->l_value = root->l_value;
+                root->left->r_value = root->key;
+                root->right->l_value = root->key;
                 rebalance(root);
                 set_min_max(root);
                 set_measure(root);
+                // TODO update height
             }
         } else if (key >= root->key) {
             delete_node(root->right, key, a_interval);
             if (root->right == NULL) {
                 del_copy_node(root->left, root);
-                if (root->right != NULL) {
-                    root->right->r_value = root->r_value;
-                    root->left->l_value = root->l_value;
-                }
                 set_min_max(root);
                 set_measure(root);
 //                delete root->left;
             }
             if (root->right) {
                 // TODO git里的代码是先set了一遍measure和minmax然后又从下往上rebalance的，不知道和这样有没有区别
+                if (root->key == key) {
+                    m_tree_t *node = root->right;
+                    while (node->right != NULL) {
+                        node = node->left;
+                    }
+                    root->key = node->key;
+                    root->left->r_value = root->key;
+                    root->right->l_value = root->key;
+                    root->left->r_value = root->key;
+                    root->right->l_value = root->key;
+                    set_measure(root->left);
+                    set_measure(root->right);
+                }
+                root->right->r_value = root->r_value;
+                root->left->l_value = root->l_value;
                 rebalance(root);
                 set_min_max(root);
                 set_measure(root);
             }
         }
     } else if (root->key == key) {
+
+
         interval_list *lsthead = (interval_list *) root->left;
         interval_list *pre = (interval_list *) root;
         while (lsthead != NULL) {
@@ -414,19 +440,19 @@ void preporder(m_tree_t *root) {
         cout << "rightmax: " << root->rightmax << " ";
         cout << "measure: " << root->measure << " ";
         cout << "leftPoint: " << ((interval_list *) root->left)->left_point;
-        cout << " rightPoint: " << ((interval_list *) root->left)->right_point << endl;
+        cout << "rightPoint: " << ((interval_list *) root->left)->right_point << endl;
         return;
     }
     preporder(root->left);
-    /*cout << "inner:" << endl;
-    cout << "key: " <<root->key << " ";
+    cout << "inner:" << endl;
+    cout << "key: " << root->key << " ";
     cout << "l: " << root->l_value << " ";
     cout << "r: " << root->r_value << " ";
     cout << "leftmin: " << root->leftmin << " ";
     cout << "rightmax: " << root->rightmax << " ";
     cout << "measure: " << root->measure << " ";
-    cout << "leftPoint: " << ((interval_list*)root->left)->left_point;
-    cout << " rightPoint: " << ((interval_list*)root->left)->right_point << endl;*/
+    // cout << "leftPoint: " << ((interval*)root->left)->a;
+    // cout << " rightPoint: " << ((interval*)root->left)->b << endl;
     preporder(root->right);
 }
 
@@ -435,10 +461,61 @@ int main() {
     struct m_tree_t *t;;
     printf("starting \n");
     t = create_m_tree();
+<<<<<<< HEAD
     insert_interval(t, 196, 200);
     insert_interval(t, 193, 200);
     insert_interval(t, 190, 200);
     cout << query_length(t) << endl;
     delete_interval(t, 190, 200);
     cout << query_length(t) << endl;
+=======
+
+    for (i = 0; i < 50; i++)
+        insert_interval(t, 2 * i, 2 * i + 1);
+    printf("inserted first 50 intervals, total length is %d, should be 50.\n", query_length(t));
+    insert_interval(t, 0, 20);
+//    printf("inserted another interval, total length is %d, should be 100.\n", query_length(t));
+    for (i = 1; i < 50; i++)
+        insert_interval(t, 199 - (3 * i), 200); /*[52,200] is longest*/
+//    printf("inserted further 49 intervals, total length is %d, should be 200.\n", query_length(t));
+    for (i = 2; i < 50; i++)
+        delete_interval(t, 2 * i, 2 * i + 1);
+//    preporder(t);
+//    cout << endl;
+    delete_interval(t, 0, 20);
+//    preporder(t);
+    printf("deleted some intervals, total length is %d, should be 150.\n", query_length(t));
+//    insert_interval(t, 1, 2);
+//    for (i = 49; i > 0; i--)
+//        delete_interval(t, 199 - (3 * i), 200);
+//    insert_interval(t, 0, 2);
+//    insert_interval(t, 1, 5);
+//    printf("deleted some intervals, total length is %d, should be 5.\n", query_length(t));
+//    insert_interval(t, 0, 100);
+//    printf("inserted another interval, total length is %d, should be 100.\n", query_length(t));
+//    for (i = 0; i <= 3000; i++)
+//        insert_interval(t, 2000 + i, 3000 + i);
+//    printf("inserted 3000 intervals, total length is %d, should be 4100.\n", query_length(t));
+//    for (i = 0; i <= 3000; i++)
+//        delete_interval(t, 2000 + i, 3000 + i);
+//    printf("deleted 3000 intervals, total length is %d, should be 100.\n", query_length(t));
+//    for (i = 0; i <= 100; i++)
+//        insert_interval(t, 10 * i, 10 * i + 100);
+//    printf("inserted another 100 intervals, total length is %d, should be 1100.\n", query_length(t));
+//    delete_interval(t, 1, 2);
+//    delete_interval(t, 0, 2);
+//    delete_interval(t, 2, 3);
+//    delete_interval(t, 0, 1);
+//    delete_interval(t, 1, 5);
+//    printf("deleted some intervals, total length is %d, should be still 1100.\n", query_length(t));
+//    for (i = 0; i <= 100; i++)
+//        delete_interval(t, 10 * i, 10 * i + 100);
+//    delete_interval(t, 0, 100);
+//    printf("deleted last interval, total length is %d, should be 0.\n", query_length(t));
+//    for (i = 0; i < 100000; i++) {
+//        insert_interval(t, i, 1000000);
+//    }
+//    printf("inserted again 100000 intervals, total length is %d, should be 1000000.\n", query_length(t));
+    printf("End Test\n");
+>>>>>>> bee5319c6e97f85526fc113c3c111a3e9a9e81b0
 }
