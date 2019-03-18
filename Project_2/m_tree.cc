@@ -143,13 +143,39 @@ void rebalance(m_tree_t *root) {
     }
 }
 
-void insert_node(m_tree_t *&root, int key) {
+void insert_node(m_tree_t *&root, int key, interval_list* a_interval) {
     if (root == NULL) {
         m_tree_t * new_node = new
         m_tree_t(key);
         root = new_node;
-    } else if (root->key == key) {
-        return;
+    } 
+    
+    // leaf node
+    if (root->right == NULL) {
+        if(root->key == key) {
+            struct interval_list curr = (interval_list*)root->left;
+            while(curr != NULL) {
+                curr = curr->next;
+            }
+            curr = a_interval;
+        }
+        else if(root->key < key) {
+            struct m_tree_t old_node = new m_tree_t(0);
+            struct m_tree_t new_node = new m_tree_t(key);
+            copy_node(root, old_node);
+            root->key = key;
+            root->left = old_node;
+            root->right = right_node;
+            insert_node(root->right, key);
+        }
+        else {
+            struct m_tree_t old_node = new m_tree_t(0);
+            struct m_tree_t new_node = new m_tree_t(key);
+            copy_node(root, old_node);
+            root->left = new_node;
+            root->right = old_node;
+            insert_node(root->left, key);
+        }
     } else if (root->key > key) {
         insert_node(root->left, key);
     } else {
