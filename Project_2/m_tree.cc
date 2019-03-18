@@ -16,7 +16,7 @@ struct m_tree_t {
     int measure;
 
     m_tree_t(int k, int l, int r) : key(k), left(NULL), right(NULL), height(1),
-                      l_value(l), r_value(r), leftmin(0), rightmax(0), measure(0) {}
+                                    l_value(l), r_value(r), leftmin(0), rightmax(0), measure(0) {}
 };
 
 struct interval_list {
@@ -83,32 +83,43 @@ void set_measure(m_tree_t *node) {
     }
 }
 
-void set_min_max(m_tree_t* node) {
-    if(node->right) {
-        if(node->left->leftmin < node->right->leftmin) {
+void set_min_max(m_tree_t *node) {
+    if (node->right) {
+        if (node->left->leftmin < node->right->leftmin) {
             node->leftmin = node->left->leftmin;
-        }
-        else {
+        } else {
             node->leftmin = node->right->leftmin;
         }
-        if(node->left->rightmax > node->right->rightmax) {
+        if (node->left->rightmax > node->right->rightmax) {
             node->rightmax = node->left->rightmax;
-        }
-        else {
+        } else {
             node->rightmax = node->right->rightmax;
         }
     }
 }
 
-void update_leaf_measure(m_tree_t *node)
-{
-    node->measure = (min(node->r_value, node->rightmax)) - (max(node->l_value, node->leftmin));;
+void update_leaf_min_max(m_tree_t *node) {
+    if (node->right != NULL) {
+        return;
+    }
+    interval_list *head = (interval_list *) node->left;
+    int min = head->right_point;
+    int max = head->left_point;
+    while (head != NULL) {
+        if (head->right_point < min) {
+            min = head->right_point;
+        }
+        if (head->left_point < max) {
+            max = head->left_point;
+        }
+        head = head->next;
+    }
+    node->leftmin = min;
+    node->rightmax = max;
 }
 
-void swap_data(m_tree_t *from, m_tree_t *to) {
-    int temp = to->key;
-    to->key = from->key;
-    from->key = temp;
+void update_leaf_measure(m_tree_t *node) {
+    node->measure = (min(node->r_value, node->rightmax)) - (max(node->l_value, node->leftmin));;
 }
 
 void copy_node(m_tree_t *from, m_tree_t *to) {
@@ -121,6 +132,59 @@ void copy_node(m_tree_t *from, m_tree_t *to) {
     to->leftmin = from->leftmin;
     to->rightmax = from->rightmax;
     to->measure = from->measure;
+}
+
+void del_copy_node(m_tree_t *from, m_tree_t *to) {
+    to->key = from->key;
+    to->left = from->left;
+    to->right = from->right;
+    to->height = from->height;
+    to->l_value = from->l_value;
+    to->r_value = from->r_value;
+    to->leftmin = from->leftmin;
+    to->rightmax = from->rightmax;
+    to->measure = from->measure;
+}
+
+// TODO check v2
+m_tree_t *left_rotate_v2(m_tree_t *&root) {
+    m_tree_t *tmp = root->left;
+    int tmp_key = root->key;
+
+    root->left = root->right;
+    root->key = root->right->key;
+    root->right = root->right->right;
+    root->left->right = root->left->left;
+    root->left->left = tmp;
+
+    root->left->key = tmp_key;
+    root->left->l_value = root->l_value;
+    root->left->r_value = root->key;
+    root->left->leftmin = min(root->left->left->leftmin, root->left->right->leftmin);
+    root->left->rightmax = max(root->left->left->rightmax, root->left->right->rightmax);
+    set_measure(root->left);
+
+    root->height = 1 +max(root->left->height, root->right->height);
+}
+
+m_tree_t *right_rotate_v2(m_tree_t *&root) {
+    m_tree_t *tmp = root->right;
+    int tmp_key = root->key;
+
+    root->right = root->left;
+    root->key = root->left->key;
+    root->left = root->right->right;
+    root->right->left = root->right->right;
+    root->right->right = tmp;
+
+    root->right->key = tmp_key;
+    root->right->l_value = root->key;
+    root->right->r_value = root->r_value;
+    root->right->leftmin = min(root->right->left->leftmin, root->right->right->leftmin);
+    root->right->rightmax = max(root->right->left->rightmax, root->right->right->rightmax);
+    set_measure(root->right);
+
+    root->height = 1 +max(root->left->height, root->right->height);
 }
 
 m_tree_t *left_rotate(m_tree_t *&root) {
@@ -161,21 +225,21 @@ void rebalance(m_tree_t *&root) {
 
     // LL
     if (root_factor > 1 && left_factor >= 0) {
-        root = right_rotate(root);
+        root = right_rotate_v2(root);
     }
         // LR
     else if (root_factor > 1 && left_factor < 0) {
-        root->left = left_rotate(root->left);
-        root = right_rotate(root);
+        root->left = left_rotate_v2(root->left);
+        root = right_rotate_v2(root);
     }
         // RR
     else if (root_factor < -1 && right_factor <= 0) {
-        root = left_rotate(root);
+        root = left_rotate_v2(root);
     }
         // RL
     else if (root_factor < -1 && right_factor > 0) {
-        root->right = right_rotate(root->right);
-        root = right_rotate(root);
+        root->right = right_rotate_v2(root->right);
+        root = right_rotate_v2(root);
     }
 }
 
@@ -209,7 +273,7 @@ void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
             }
             curr = a_interval;
             update_leaf_measure(root);
-            cout <<"insert measure: " << root->measure << endl;
+            cout << "insert measure: " << root->measure << endl;
         } else if (root->key < key) {
             struct m_tree_t *old_node = new m_tree_t(0, root->l_value, key);
             struct m_tree_t *new_node = new m_tree_t(key, key, root->r_value);
@@ -217,11 +281,11 @@ void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
             root->key = key;
             old_node->r_value = key;
             root->left = old_node;
-            new_node->left = (m_tree_t*) a_interval;
+            new_node->left = (m_tree_t *) a_interval;
             new_node->leftmin = a_interval->left_point;
             new_node->rightmax = a_interval->right_point;
-            cout << "interval left: " << new_node->leftmin << endl;
-            cout << "interval right: " << new_node->rightmax << endl;
+//            cout << "interval left: " << new_node->leftmin << endl;
+//            cout << "interval right: " << new_node->rightmax << endl;
             update_leaf_measure(new_node);
 //            cout <<"insert measure: " << new_node->measure << endl;
             root->right = new_node;
@@ -231,7 +295,7 @@ void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
             struct m_tree_t *new_node = new m_tree_t(key, root->l_value, root->key);
             copy_node(root, old_node);
             root->right = old_node;
-            new_node->left = (m_tree_t*) a_interval;
+            new_node->left = (m_tree_t *) a_interval;
             new_node->leftmin = a_interval->left_point;
             new_node->rightmax = a_interval->right_point;
             cout << "interval left: " << new_node->leftmin << endl;
@@ -260,8 +324,12 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
         if (key < root->key) {
             delete_node(root->left, key, a_interval);
             if (root->left == NULL) {
-                copy_node(root->right, root);
-                free(root->right);
+                del_copy_node(root->right, root);
+                if (root->right != NULL) {
+                    root->right->r_value = root->r_value;
+                    root->left->l_value = root->l_value;
+                }
+                set_measure(root);
             }
             if (root->right) {
                 rebalance(root);
@@ -269,38 +337,47 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
         } else if (key >= root->key) {
             delete_node(root->right, key, a_interval);
             if (root->right == NULL) {
-                copy_node(root->left, root);
-                free(root->left);
+                del_copy_node(root->left, root);
+                if (root->right != NULL) {
+                    root->right->r_value = root->r_value;
+                    root->left->l_value = root->l_value;
+                }
+                set_measure(root);
+//                delete root->left;
             }
             if (root->right) {
+                // TODO git里的代码是先set了一遍measure和minmax然后又从下往上rebalance的，不知道和这样有没有区别
+                set_measure(root);
+                set_min_max(root);
                 rebalance(root);
             }
         }
     } else if (root->key == key) {
-            interval_list *lsthead = (interval_list *) root->left;
-            interval_list *pre = (interval_list *) root;
-            while (lsthead != NULL) {
-                if (lsthead->left_point == a_interval->left_point && lsthead->right_point == a_interval->right_point) {
-                    interval_list *temp = lsthead;
-                    if (pre == (interval_list *) root) {
-                        root->left = (m_tree_t *) lsthead->next;
-                    } else {
-                        pre->next = lsthead->next;
-                    }
-                    free(temp);
-                    break;
+        interval_list *lsthead = (interval_list *) root->left;
+        interval_list *pre = (interval_list *) root;
+        while (lsthead != NULL) {
+            if (lsthead->left_point == a_interval->left_point && lsthead->right_point == a_interval->right_point) {
+//                    interval_list *temp = lsthead;
+                if (pre == (interval_list *) root) {
+                    root->left = reinterpret_cast<m_tree_t *>(lsthead->next);
+                } else {
+                    pre->next = lsthead->next;
                 }
-                pre = lsthead;
-                lsthead = lsthead->next;
+//                    delete temp;
+                break;
             }
+            pre = lsthead;
+            lsthead = lsthead->next;
+        }
 
-            if (root->left != NULL) {
-                set_measure(root);
-                // TODO
-            } else {
-                root = NULL;
-            }
-
+        if (root->left != NULL) {
+            update_leaf_measure(root);
+            update_leaf_min_max(root);
+            // TODO check here
+            // 新写了 update leaf 的min和max
+        } else {
+            root = NULL;
+        }
     } else {
         return;
     }
@@ -334,14 +411,14 @@ int query_length(m_tree_t *tree) {
 void preporder(m_tree_t *root) {
     if (root->right == NULL) {
         cout << "leaf:" << endl;
-        cout << "key: " <<root->key << " ";
+        cout << "key: " << root->key << " ";
         cout << "l: " << root->l_value << " ";
         cout << "r: " << root->r_value << " ";
         cout << "leftmin: " << root->leftmin << " ";
         cout << "rightmax: " << root->rightmax << " ";
         cout << "measure: " << root->measure << " ";
-        cout << "leftPoint: " << ((interval_list*)root->left)->left_point;
-        cout << " rightPoint: " << ((interval_list*)root->left)->right_point << endl;
+        cout << "leftPoint: " << ((interval_list *) root->left)->left_point;
+        cout << " rightPoint: " << ((interval_list *) root->left)->right_point << endl;
         return;
     }
     preporder(root->left);
@@ -362,18 +439,19 @@ int main() {
     struct m_tree_t *t;
     printf("starting \n");
     t = create_m_tree();
-    for (i = 0; i < 50; i++)
+    for (i = 0; i < 3; i++)
         insert_interval(t, 2 * i, 2 * i + 1);
-//    preporder(t);
-//    for (i = 1; i < 3; i++)
-//        delete_interval(t, 2 * i, 2 * i + 1);
-//    preporder(t);
-    printf("inserted first 50 intervals, total length is %d, should be 50.\n", query_length(t));
-    insert_interval(t, 0, 100);
-    printf("inserted another interval, total length is %d, should be 100.\n", query_length(t));
-    for (i = 1; i < 50; i++)
-        insert_interval(t, 199 - (3 * i), 200);
-    printf("inserted further 49 intervals, total length is %d, should be 200.\n", query_length(t));
+    preporder(t);
+    cout << endl;
+    for (i = 1; i < 3; i++)
+        delete_interval(t, 2 * i, 2 * i + 1);
+    preporder(t);
+//    printf("inserted first 50 intervals, total length is %d, should be 50.\n", query_length(t));
+//    insert_interval(t, 0, 100);
+//    printf("inserted another interval, total length is %d, should be 100.\n", query_length(t));
+//    for (i = 1; i < 50; i++)
+//        insert_interval(t, 199 - (3 * i), 200);
+//    printf("inserted further 49 intervals, total length is %d, should be 200.\n", query_length(t));
 
     /*for (i = 2; i < 50; i++)
         delete_interval(t, 2 * i, 2 * i + 1);
