@@ -213,31 +213,31 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
     if (NULL == root) {
         return;
     }
-
-    if (key < root->key) {
-        delete_node(root->left, key, a_interval);
-        if (root->left == NULL) {
-            m_tree_t *temp = root;
-            root = root->right;
-            free(temp);
+    if (root->right != NULL) {
+        if (key < root->key) {
+            delete_node(root->left, key, a_interval);
+            if (root->left == NULL) {
+                m_tree_t *temp = root;
+                root = root->right;
+                free(temp);
+            }
+            rebalance(root);
+        } else if (key >= root->key) {
+            delete_node(root->right, key, a_interval);
+            if (root->right == NULL) {
+                m_tree_t *temp = root;
+                root = root->left;
+                free(temp);
+            }
+            rebalance(root);
         }
-        rebalance(root);
-    } else if (key > root->key) {
-        delete_node(root->right, key, a_interval);
-        if (root->right == NULL) {
-            m_tree_t *temp = root;
-            root = root->left;
-            free(temp);
-        }
-        rebalance(root);
-    } else {
-        if (root->right == NULL) {
+    } else if (root->key == key) {
             interval_list *lsthead = (interval_list *) root->left;
-            interval_list *pre = (interval_list*)root;
+            interval_list *pre = (interval_list *) root;
             while (lsthead != NULL) {
                 if (lsthead->left_point == a_interval->left_point && lsthead->right_point == a_interval->right_point) {
-                    if (pre == (interval_list*)root) {
-                        root->left = (m_tree_t*)lsthead->next;
+                    if (pre == (interval_list *) root) {
+                        root->left = (m_tree_t *) lsthead->next;
                     } else {
                         pre->next = lsthead->next;
                     }
@@ -245,19 +245,16 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
                 pre = lsthead;
                 lsthead = lsthead->next;
             }
-            m_tree_t *temp = root;
-            root = root->left;
-            free(temp);
-        } else {
-            // node has both left and right child
-            // find biggest element in left subtree
-            m_tree_t *temp = root->left;
-            while (temp->right != NULL) {
-                temp = temp->right;
+
+            if (root->left != NULL) {
+                set_measure(root);
+                // TODO
+            } else {
+                root = NULL;
             }
-            swap_data(temp, root);
-            delete_node(root->left, temp->key, a_interval);
-        }
+
+    } else {
+        return;
     }
 
     if (root) {
@@ -288,8 +285,8 @@ int query_length(m_tree_t *tree) {
 void preporder(m_tree_t *root) {
     if (root->right == NULL) {
         cout << root->key << " ";
-        cout << "left: " << ((interval_list*)root->left)->left_point;
-        cout << " right: " << ((interval_list*)root->left)->right_point << endl;
+        cout << "left: " << ((interval_list *) root->left)->left_point;
+        cout << " right: " << ((interval_list *) root->left)->right_point << endl;
         return;
     }
     preporder(root->left);
