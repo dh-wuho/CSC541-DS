@@ -99,7 +99,7 @@ void copy_node(m_tree_t *from, m_tree_t *to) {
     to->measure = from->measure;
 }
 
-m_tree_t *left_rotate(m_tree_t *root) {
+m_tree_t *left_rotate(m_tree_t *&root) {
     m_tree_t *new_root = root->right;
 
     // rotate
@@ -114,7 +114,7 @@ m_tree_t *left_rotate(m_tree_t *root) {
     return new_root;
 }
 
-m_tree_t *right_rotate(m_tree_t *root) {
+m_tree_t *right_rotate(m_tree_t *&root) {
     m_tree_t *new_root = root->left;
 
     // rotate
@@ -129,7 +129,7 @@ m_tree_t *right_rotate(m_tree_t *root) {
     return new_root;
 }
 
-void rebalance(m_tree_t *root) {
+void rebalance(m_tree_t *&root) {
     // factor = left - right
     int root_factor = get_balance_factor(root);
     int left_factor = get_balance_factor(root->left);
@@ -137,21 +137,21 @@ void rebalance(m_tree_t *root) {
 
     // LL
     if (root_factor > 1 && left_factor >= 0) {
-        right_rotate(root);
+        root = right_rotate(root);
     }
         // LR
     else if (root_factor > 1 && left_factor < 0) {
         root->left = left_rotate(root->left);
-        right_rotate(root);
+        root = right_rotate(root);
     }
         // RR
     else if (root_factor < -1 && right_factor <= 0) {
-        left_rotate(root);
+        root = left_rotate(root);
     }
         // RL
     else if (root_factor < -1 && right_factor > 0) {
         root->right = right_rotate(root->right);
-        right_rotate(root);
+        root = right_rotate(root);
     }
 }
 
@@ -160,16 +160,17 @@ void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
         m_tree_t *new_node = new
                 m_tree_t(key);
         root = new_node;
+        return;
     }
 
-    if(root->left == NULL) {
+    if (root->left == NULL) {
         root->left = (m_tree_t *) a_interval;
         root->key = key;
-		root->height = 1;
-		root->leftmin = a_interval->a;
-		root->rightmax = a_interval->b;
-		//set_measure(root);
-		root->right = NULL;
+        root->height = 1;
+        root->leftmin = a_interval->left_point;
+        root->rightmax = a_interval->right_point;
+        //set_measure(root);
+        root->right = NULL;
         return;
     }
 
@@ -208,23 +209,42 @@ void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
     root->height = max(get_height(root->left), get_height(root->right)) + 1;
 }
 
-void delete_node(m_tree_t *&root, int key) {
+void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
     if (NULL == root) {
         return;
     }
 
     if (key < root->key) {
-        delete_node(root->left, key);
-        rebalance(root);
-    } else if (key > root->key) {
-        delete_node(root->right, key);
-        rebalance(root);
-    } else {
+        delete_node(root->left, key, a_interval);
         if (root->left == NULL) {
             m_tree_t *temp = root;
             root = root->right;
             free(temp);
-        } else if (root->right == NULL) {
+        }
+        rebalance(root);
+    } else if (key > root->key) {
+        delete_node(root->right, key, a_interval);
+        if (root->right == NULL) {
+            m_tree_t *temp = root;
+            root = root->left;
+            free(temp);
+        }
+        rebalance(root);
+    } else {
+        if (root->right == NULL) {
+            interval_list *lsthead = (interval_list *) root->left;
+            interval_list *pre = (interval_list*)root;
+            while (lsthead != NULL) {
+                if (lsthead->left_point == a_interval->left_point && lsthead->right_point == a_interval->right_point) {
+                    if (pre == (interval_list*)root) {
+                        root->left = (m_tree_t*)lsthead->next;
+                    } else {
+                        pre->next = lsthead->next;
+                    }
+                }
+                pre = lsthead;
+                lsthead = lsthead->next;
+            }
             m_tree_t *temp = root;
             root = root->left;
             free(temp);
@@ -236,7 +256,7 @@ void delete_node(m_tree_t *&root, int key) {
                 temp = temp->right;
             }
             swap_data(temp, root);
-            delete_node(root->left, temp->key);
+            delete_node(root->left, temp->key, a_interval);
         }
     }
 
@@ -249,25 +269,27 @@ m_tree_t *create_m_tree() {
     return new m_tree_t(-1);
 }
 
-
-void insert_interval(m_tree_t *tree, int a, int b) {
-    struct interval_list* curr_interval = new interval_list(a, b);
+void insert_interval(m_tree_t *&tree, int a, int b) {
+    struct interval_list *curr_interval = new interval_list(a, b);
     insert_node(tree, a, curr_interval);
     insert_node(tree, b, curr_interval);
 }
 
-
 void delete_interval(m_tree_t *tree, int a, int b) {
-
+    struct interval_list *curr_interval = new interval_list(a, b);
+    delete_node(tree, a, curr_interval);
+    delete_node(tree, b, curr_interval);
 }
-
 
 int query_length(m_tree_t *tree) {
 
 }
 
 void preporder(m_tree_t *root) {
-    if (nullptr == root) {
+    if (root->right == NULL) {
+        cout << root->key << " ";
+        cout << "left: " << ((interval_list*)root->left)->left_point;
+        cout << " right: " << ((interval_list*)root->left)->right_point << endl;
         return;
     }
     preporder(root->left);
@@ -277,11 +299,14 @@ void preporder(m_tree_t *root) {
 
 int main() {
     int i;
-    struct m_tree_t *t;;
+    struct m_tree_t *t;
     printf("starting \n");
     t = create_m_tree();
-    for (i = 0; i < 50; i++)
+    for (i = 0; i < 3; i++)
         insert_interval(t, 2 * i, 2 * i + 1);
+    preporder(t);
+    for (i = 1; i < 3; i++)
+        delete_interval(t, 2 * i, 2 * i + 1);
     preporder(t);
     /*printf("inserted first 50 intervals, total length is %d, should be 50.\n", query_length(t));
     insert_interval(t, 0, 100);
