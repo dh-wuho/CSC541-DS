@@ -254,7 +254,7 @@ void rebalance(m_tree_t *&root) {
         // RL
     else if (root_factor < -1 && right_factor > 0) {
         root->right = right_rotate(root->right);
-        root = right_rotate(root);
+        root = left_rotate(root);
     }
 }
 
