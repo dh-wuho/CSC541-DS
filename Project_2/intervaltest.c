@@ -51,3 +51,16 @@ int main() {
     printf("inserted again 100000 intervals, total length is %d, should be 1000000.\n", query_length(t));
     printf("End Test\n");
 }
+
+
+int main() {
+    int i;
+    struct m_tree_t *t;;
+    printf("starting \n");
+    t = create_m_tree();
+    //insert_interval(t, 0, 100);
+    //printf("inserted another interval, total length is %d, should be 100.\n", query_length(t));
+    for (i = 1; i < 4; i++)
+        insert_interval(t, 199 - (3 * i), 200); /*[52,200] is longest*/
+    printf("inserted further 49 intervals, total length is %d, should be 200.\n", query_length(t));
+}
