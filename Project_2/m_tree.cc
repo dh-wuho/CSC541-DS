@@ -14,15 +14,16 @@ struct m_tree_t {
     int rightmax;
     int measure;
 
-    m_tree_t(int k): key(k), left(NULL), right(NULL), height(1),
-        l_value(0), r_value(0), leftmin(0), rightmax(0), measure(0) {}
+    m_tree_t(int k) : key(k), left(NULL), right(NULL), height(1),
+                      l_value(0), r_value(0), leftmin(0), rightmax(0), measure(0) {}
 };
 
 struct interval_list {
     int left_point;
     int right_point;
-    interval_list* next;
-    interval_list(int a, int b): left_point(a), right_point(b), next(NULL) {}
+    interval_list *next;
+
+    interval_list(int a, int b) : left_point(a), right_point(b), next(NULL) {}
 };
 
 int get_height(m_tree_t *node) {
@@ -87,6 +88,17 @@ void swap_data(m_tree_t *from, m_tree_t *to) {
     from->key = temp;
 }
 
+void copy_node(m_tree_t *from, m_tree_t *to) {
+    to->key = from->key;
+    to->left = from->left;
+    to->right = from->right;
+    to->height = from->height;
+    to->l_value = from->l_value;
+    to->r_value = from->r_value;
+    to->rightmax = from->rightmax;
+    to->measure = from->measure;
+}
+
 m_tree_t *left_rotate(m_tree_t *root) {
     m_tree_t *new_root = root->right;
 
@@ -143,43 +155,41 @@ void rebalance(m_tree_t *root) {
     }
 }
 
-void insert_node(m_tree_t *&root, int key, interval_list* a_interval) {
+void insert_node(m_tree_t *&root, int key, interval_list *a_interval) {
     if (root == NULL) {
-        m_tree_t * new_node = new
-        m_tree_t(key);
+        m_tree_t *new_node = new
+                m_tree_t(key);
         root = new_node;
-    } 
-    
+    }
+
     // leaf node
     if (root->right == NULL) {
-        if(root->key == key) {
-            struct interval_list curr = (interval_list*)root->left;
-            while(curr != NULL) {
+        if (root->key == key) {
+            struct interval_list *curr = (interval_list *) root->left;
+            while (curr != NULL) {
                 curr = curr->next;
             }
             curr = a_interval;
-        }
-        else if(root->key < key) {
-            struct m_tree_t old_node = new m_tree_t(0);
-            struct m_tree_t new_node = new m_tree_t(key);
+        } else if (root->key < key) {
+            struct m_tree_t *old_node = new m_tree_t(0);
+            struct m_tree_t *new_node = new m_tree_t(key);
             copy_node(root, old_node);
             root->key = key;
             root->left = old_node;
-            root->right = right_node;
-            insert_node(root->right, key);
-        }
-        else {
-            struct m_tree_t old_node = new m_tree_t(0);
-            struct m_tree_t new_node = new m_tree_t(key);
+            root->right = new_node;
+            insert_node(root->right, key, a_interval);
+        } else {
+            struct m_tree_t *old_node = new m_tree_t(0);
+            struct m_tree_t *new_node = new m_tree_t(key);
             copy_node(root, old_node);
             root->left = new_node;
             root->right = old_node;
-            insert_node(root->left, key);
+            insert_node(root->left, key, a_interval);
         }
     } else if (root->key > key) {
-        insert_node(root->left, key);
+        insert_node(root->left, key, a_interval);
     } else {
-        insert_node(root->right, key);
+        insert_node(root->right, key, a_interval);
     }
 
     rebalance(root);
@@ -262,7 +272,7 @@ int main() {
     delete_node(root, 4);
     delete_node(root, 6);
     delete_node(root, 1);
-    delete_node(root, 2);
+//    delete_node(root, 2);
 
     preporder(root);
 }
