@@ -2,6 +2,12 @@ Group Members:
 Hao Wu, UnityID: hwu23.
 Cheng Yuan, UnityID: cyuan7.
 
+The compile and execute command is:
+
+```bash
+g++ -g -I. hwu23_cyuan7.cc -o m_tree -lpthread && ./m_tree
+```
+
 We both get involved in designing the measure tree data structure, including caculating measure, get leftmin and rightmax and record associated intervals.
 
 Hao implemented the insertion part of measure mainly.
