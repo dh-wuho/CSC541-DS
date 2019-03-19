@@ -123,6 +123,42 @@ void update_leaf_measure(m_tree_t *node) {
     node->measure = (min(node->r_value, node->rightmax)) - (max(node->l_value, node->leftmin));;
 }
 
+void update_rl_value(m_tree_t *&node) {
+    m_tree_t *ptr = node->left;
+    while (ptr) {
+        ptr->r_value = node->key;
+        set_measure(ptr);
+        ptr = ptr->right;
+    }
+    ptr = node->right;
+    while (ptr) {
+        ptr->l_value = node->key;
+        set_measure(ptr);
+        if (ptr->right == NULL) {
+            break;
+        }
+        ptr = ptr->left;
+    }
+}
+
+void update_rl_value_3in1(m_tree_t *&node) {
+    m_tree_t *ptr = node->left;
+    while (ptr) {
+        ptr->r_value = node->r_value;
+        set_measure(ptr);
+        ptr = ptr->right;
+    }
+    ptr = node->right;
+    while (ptr) {
+        ptr->l_value = node->l_value;
+        set_measure(ptr);
+        if (ptr->right == NULL) {
+            break;
+        }
+        ptr = ptr->left;
+    }
+}
+
 void copy_node(m_tree_t *from, m_tree_t *to) {
     to->key = from->key;
     to->left = from->left;
@@ -312,6 +348,7 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
         if (key < root->key) {
             delete_node(root->left, key, a_interval);
             if (root->left == NULL) {
+                update_rl_value_3in1(root);
                 del_copy_node(root->right, root);
                 set_min_max(root);
                 set_measure(root);
@@ -323,19 +360,6 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
                         node = node->right;
                     }
                     root->key = node->key;
-                    m_tree_t *ptr = root->left;
-                    while (ptr) {
-                        ptr->r_value = root->key;
-                        ptr = ptr->right;
-                    }
-                    ptr = root->right;
-                    while (ptr) {
-                        ptr->l_value = root->key;
-                        ptr = ptr->left;
-                        if (ptr->right == NULL) {
-                            break;
-                        }
-                    }
                     set_measure(root->left);
                     set_measure(root->right);
                 }
@@ -350,6 +374,7 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
         } else if (key >= root->key) {
             delete_node(root->right, key, a_interval);
             if (root->right == NULL) {
+                update_rl_value_3in1(root);
                 del_copy_node(root->left, root);
                 set_min_max(root);
                 set_measure(root);
@@ -363,21 +388,7 @@ void delete_node(m_tree_t *&root, int key, interval_list *a_interval) {
                         node = node->left;
                     }
                     root->key = node->key;
-                    m_tree_t *ptr = root->left;
-                    while (ptr) {
-                        ptr->r_value = root->key;
-                        set_measure(ptr);
-                        ptr = ptr->right;
-                    }
-                    ptr = root->right;
-                    while (ptr) {
-                        ptr->l_value = root->key;
-                        set_measure(ptr);
-                        if (ptr->right == NULL) {
-                            break;
-                        }
-                        ptr = ptr->left;
-                    }
+                    update_rl_value(root);
 //                    set_measure(root->left);
 //                    set_measure(root->right);
                 }
