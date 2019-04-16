@@ -1,4 +1,5 @@
-#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #define TOTAL 2000000
 #define ARRAYLENGTH 31250
