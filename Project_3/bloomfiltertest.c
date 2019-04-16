@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-#define SETBIT(x, y) (x |= (1 << y))
 #define TOTAL 2000000
 #define ARRAYLENGTH 31250
 
@@ -123,7 +122,7 @@ void insert_bf(bf_t* b, char* s) {
       hashValue %= TOTAL;
       index = hashValue / 64;       // each long is 64-bit.
       n_bit = hashValue % 64;
-      SETBIT(b->bfArray[index * ARRAYLENGTH], n_bit);
+      b->bfArray[index * ARRAYLENGTH] |= (1 << n_bit);
    }
 } 
 
