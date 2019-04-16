@@ -122,7 +122,7 @@ void insert_bf(bf_t* b, char* s) {
       hashValue %= TOTAL;
       index = hashValue / 64;       // each long is 64-bit.
       n_bit = hashValue % 64;
-      b->bfArray[index * ARRAYLENGTH] |= (1 << n_bit);
+      b->bfArray[i * ARRAYLENGTH + index] |= (1 << n_bit);
    }
 } 
 
@@ -138,7 +138,7 @@ int is_element(bf_t* b, char* q) {
       hashValue %= TOTAL;
       index = hashValue / 64;       // each long is 64-bit.
       n_bit = hashValue % 64;
-      tmp = b->bfArray[index];
+      tmp = b->bfArray[i * ARRAYLENGTH + index];
       tmp = (tmp >> n_bit) & 1;
       isEle &= tmp;
    }
