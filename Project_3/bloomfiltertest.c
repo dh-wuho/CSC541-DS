@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define TOTAL 2000000
 #define ARRAYLENGTH 31250
@@ -135,7 +136,7 @@ int is_element(bf_t* b, char* q) {
    unsigned int n_bit; 
    unsigned long tmp;
    for(i = 0; i < 8; i++) {
-      hashValue = MurmurHash2(s, strlen(s), seeds[i]);
+      hashValue = MurmurHash2(q, strlen(q), seeds[i]);
       hashValue %= TOTAL;
       index = hashValue / 64;       // each long is 64-bit.
       n_bit = hashValue % 64;
