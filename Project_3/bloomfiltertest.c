@@ -55,7 +55,7 @@ void sample_string_E(char *s, long i)
 }
 
 struct bf_t {
-   unsigned long bfArray[TOTAL / 64];     // 250,000
+   unsigned long bfArray[250000];     // TOTAL / 64
    bf_t(): bfArray() {}
 };
 
@@ -153,11 +153,13 @@ int main()
    bf_t * bloom;
    bloom = create_bf();
    printf("Created Filter\n");
+   printf("%d", bloom);
    for( i= 0; i< 1450000; i++ )
    {  char s[8];
       sample_string_A(s,i);
       insert_bf( bloom, s );
    }
+   printf("abcd\n");
    for( i= 0; i< 500000; i++ )
    {  char s[7];
       sample_string_B(s,i);
