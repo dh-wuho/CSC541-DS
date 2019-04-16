@@ -212,6 +212,6 @@ int main() {
             j += 1;
     }
     printf("Found %d positive errors out of 1,000,000 tests.\n", j);
-    printf("Positive error rate %f\%.\n", (float) j / 10000.0);
+    printf("Positive error rate %f%%.\n", (float) j / 10000.0);
 
 } 
