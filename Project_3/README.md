@@ -20,3 +20,5 @@ Cheng implemented the function to determine wheter a element is in the DS
 - is_element(bf_t *b, char *q)
 
 All functions are completed and all testcases are passed in EOS server of NCSU.
+
+We changed the last line of main function so that it can output correctly.
