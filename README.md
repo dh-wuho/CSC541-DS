@@ -8,7 +8,7 @@ Build a balanced tree. We use Red-Black Tree to implement this data structure.
 
 ## Project 2
 
-We are asked to implement a measure so it can return the measure of several intervals in O(1) time. 
+We are asked to implement a measure tree so it can return the measure of several intervals in O(1) time. 
 
 We use recursion to build the data structre. It's hard to think and debug, so maybe iteration is a better way.
 
